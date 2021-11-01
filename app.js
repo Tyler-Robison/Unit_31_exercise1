@@ -140,54 +140,47 @@ const pokedexList = []
 // }
 
 // FS part 3
-const pokemonArr = [];
+
 
 function getAllPokemon() {
+    const pokemonArr = [];
     const threeUrlRes = []
-    const nameArr = [];
-    
+
     for (let i = 1; i < 151; i++) {
-        fourPokemonPromises.push(
-            axios.get(`${pokemonUrl}${i}`)
-        );
+        fourPokemonPromises.push(axios.get(`${pokemonUrl}${i}`));
     }
+    return Promise.all(fourPokemonPromises)
 
-    // fourPokemonPromises.push(axios.get('asasddsa'))
-
-    Promise.all(fourPokemonPromises)
-        .then(pokemonArr => {
-            pokemonArr.forEach(pokemon => {
+        .then(fourPokemonPromises => {
+            fourPokemonPromises.forEach(pokemon => {
                 const pokedexObj = {}
                 pokedexObj['name'] = pokemon.data.forms[0].name;
                 pokedexObj['url'] = pokemon.data.forms[0].url
                 pokedexList.push(pokedexObj)
             })
-        })
-        .then(() => {
             for (let i = 0; i < 3; i++) {
                 threeUrlRes.push(axios.get(`${pokedexList[Math.floor(Math.random() * 151) + 1].url}`))
             }
+            return Promise.all(threeUrlRes)
         })
-        .then(() => {
-            Promise.all(threeUrlRes)
-                .then(res => {
-                    for (let i = 0; i < 3; i++) {
-                        nameArr.push(res[i].data.name)
-                    }
-                    for (let i = 0; i < nameArr.length; i++) {
-                        axios.get(`https://pokeapi.co/api/v2/pokemon-species/${nameArr[i]}`)
-                        .then(res => {
-                            console.log('description: ', res.data.flavor_text_entries[0].flavor_text)
-                            console.log('name: ', res.data.name)
-                        })
-                    }
-                })
-        })
-    
 
+        .then(res => {
+            const nameArr = res.map(ele => ele.data.name)
+
+            for (let i = 0; i < nameArr.length; i++) {
+                pokemonArr.push(axios.get(`https://pokeapi.co/api/v2/pokemon-species/${nameArr[i]}`))
+            }
+            return Promise.all(pokemonArr)
+        })
+        .then(pokemonArr => {
+            for (let i = 0; i < pokemonArr.length; i++){
+                console.log(pokemonArr[i].data.name)
+                console.log(pokemonArr[i].data.flavor_text_entries[0].flavor_text)
+            }
+
+        })
         .catch(err => console.log(err))
 }
-
 
 getAllPokemon()
 
